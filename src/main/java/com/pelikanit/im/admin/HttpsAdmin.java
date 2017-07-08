@@ -1,6 +1,5 @@
 package com.pelikanit.im.admin;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,11 +20,11 @@ import org.jboss.resteasy.spi.ResteasyDeployment;
 import com.pelikanit.im.IrrigationManagement;
 import com.pelikanit.im.admin.im.IrrigationManagementService;
 import com.pelikanit.im.utils.ConfigurationUtils;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
 @SuppressWarnings("restriction")
 public class HttpsAdmin {
@@ -87,6 +86,7 @@ public class HttpsAdmin {
 		}
 		
 		httpsServer = HttpsServer.create(address, REQUEST_BACKLOG);
+		httpsServer.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(5));
 		
         char[] passphrase = config.getHttpsAdminKeystorePassword().toCharArray();
         KeyStore ks = KeyStore.getInstance("JKS");

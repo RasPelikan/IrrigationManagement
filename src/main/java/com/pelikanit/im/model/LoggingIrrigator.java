@@ -7,12 +7,12 @@ public class LoggingIrrigator extends Irrigator {
 	private static final Logger logger = Logger.getLogger(LoggingIrrigator.class.getCanonicalName());
 	
 	@Override
-	public void on() {
+	protected void switchOn() {
 		logger.info("irrigator '" + getId() + "': ON");
 	}
 	
 	@Override
-	public void off() {
+	protected void switchOff() {
 		logger.info("irrigator '" + getId() + "': OFF");
 	}
 	

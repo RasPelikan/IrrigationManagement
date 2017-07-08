@@ -3,14 +3,37 @@ package com.pelikanit.im.model;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class HumanitySensor {
+public class HumanitySensor implements UrlBasedComponent<Float> {
 
 	private int id;
+
+	private int connectTimeout;
+	
+	private int readTimeout;
 	
 	private String url;
 	
 	private float value = 1.0f;
+	
+	public void fetch() throws Exception {
+		value = UrlBasedComponent.super.getValue(null);
+	}
 
+	@Override
+	public int getConnectTimeout() {
+		return connectTimeout;
+	}
+	
+	@Override
+	public int getReadTimeout() {
+		return readTimeout;
+	}
+	
+	@Override
+	public Float parse(final String value) {
+		return Float.parseFloat(value);
+	}
+	
 	@Override
 	public String toString() {
 		return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
@@ -54,6 +77,14 @@ public class HumanitySensor {
 
 	public void setValue(float value) {
 		this.value = value;
+	}
+	
+	public void setConnectTimeout(int connectTimeout) {
+		this.connectTimeout = connectTimeout;
+	}
+	
+	public void setReadTimeout(int readTimeout) {
+		this.readTimeout = readTimeout;
 	}
 	
 }

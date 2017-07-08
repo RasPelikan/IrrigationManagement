@@ -8,12 +8,12 @@ public class GpioBasedIrrigator extends Irrigator {
 	private String gpio;
 	
 	@Override
-	public void on() {
+	protected void switchOn() {
 		// switch on gpio
 	}
 	
 	@Override
-	public void off() {
+	protected void switchOff() {
 		// switch off gpio
 	}
 	

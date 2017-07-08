@@ -34,6 +34,8 @@ public class ConfigurationUtils {
 	private static final String PROPS_CYCLES = "cycles";
 	private static final String PROPS_CYCLE = "cycle.";
 	private static final String PROPS_IRRIGATOR = "irrigator.";
+	private static final String PROPS_URL_CONNECT_TIMEOUT = "url.timeout.connect";
+	private static final String PROPS_URL_READ_TIMEOUT = "url.timeout.read";
 	
 	private Properties props;
 	
@@ -212,6 +214,19 @@ public class ConfigurationUtils {
 		
 	}
 	
+	public int getUrlComponentConnectTimeout() {
+		
+		return getIntProperty(PROPS_URL_CONNECT_TIMEOUT);
+		
+	}
+	
+	public int getUrlComponentReadTimeout() {
+		
+		return getIntProperty(PROPS_URL_READ_TIMEOUT);
+		
+	}
+
+	@SuppressWarnings("unused")
 	private float getFloatProperty(final String propsName) {
 		
 		final String value = props.getProperty(propsName);
