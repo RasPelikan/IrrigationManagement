@@ -63,7 +63,7 @@ public class IrrigationManagement implements Shutdownable {
 	private Map<Integer, List<Irrigator>> irrigators;
 
 	private ActiveCycle activeCycle;
-
+	
 	/**
 	 * Entry-point at startup.
 	 * 

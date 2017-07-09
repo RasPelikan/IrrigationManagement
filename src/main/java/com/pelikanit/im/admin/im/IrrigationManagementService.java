@@ -50,7 +50,7 @@ public class IrrigationManagementService {
 			
 		}).start();
 		
-		return "SHUTDOWN now...";
+		return "{\"status\":\"SHUTDOWN now...\"}";
 		
 	}
 	
@@ -89,10 +89,10 @@ public class IrrigationManagementService {
 			} else {
 				irrigationManagement.switchOn(id);
 			}
-			return "OK";
+			return "{\"status\": \"OK\"}";
 		} catch (RuntimeException e) {
 			logger.log(Level.WARNING, e.getMessage(), e.getCause());
-			return e.getMessage();
+			return "{\"status\": \"" + e.getMessage() + "\"}";
 		}
 		
 	}

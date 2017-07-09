@@ -25,11 +25,17 @@ public abstract class CGIHttpHandler implements HttpHandler {
 		final byte[] buffer = new byte[1024];
 		int read;
 		
-		final String resourceName = getResourcePackage() + pathInfo;
+		final String filename;
+		if (pathInfo.endsWith("/")) {
+			filename = pathInfo + "index.html";
+		} else {
+			filename = pathInfo;
+		}
+		final String resourceName = getResourcePackage() + filename;
 		try (final InputStream in = getClass().getClassLoader()
 				.getResourceAsStream(resourceName);
 				final OutputStream out = exchange.getResponseBody()) {
-			
+
 			while ((read = in.read(buffer)) != -1) {
 				
 				out.write(buffer, 0, read);
