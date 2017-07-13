@@ -3,25 +3,28 @@ package com.pelikanit.im.model;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import com.pi4j.io.gpio.GpioPinDigitalOutput;
+import com.pi4j.io.gpio.PinState;
+
 public class GpioBasedIrrigator extends Irrigator {
 
-	private String gpio;
+	private GpioPinDigitalOutput gpio;
 	
 	@Override
 	protected void switchOn() {
-		// switch on gpio
+		gpio.setState(PinState.LOW);
 	}
 	
 	@Override
 	protected void switchOff() {
-		// switch off gpio
+		gpio.setState(PinState.HIGH);
 	}
 	
-	public String getGpio() {
+	public GpioPinDigitalOutput getGpio() {
 		return gpio;
 	}
 	
-	public void setGpio(String gpio) {
+	public void setGpio(GpioPinDigitalOutput gpio) {
 		this.gpio = gpio;
 	}
 

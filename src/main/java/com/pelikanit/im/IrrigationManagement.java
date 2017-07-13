@@ -12,12 +12,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-
 
 import com.pelikanit.im.admin.HttpsAdmin;
 import com.pelikanit.im.model.ActiveCycle;
@@ -30,7 +28,13 @@ import com.pelikanit.im.model.LoggingIrrigator;
 import com.pelikanit.im.model.RainSensor;
 import com.pelikanit.im.model.UrlBasedIrrigator;
 import com.pelikanit.im.utils.ConfigurationUtils;
-import com.pi4j.wiringpi.GpioUtil;
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalOutput;
+import com.pi4j.io.gpio.PinMode;
+import com.pi4j.io.gpio.PinPullResistance;
+import com.pi4j.io.gpio.PinState;
+import com.pi4j.io.gpio.RaspiPin;
 
 /**
  * Main-class. Responsible for properly startup and shutdown of all services:
@@ -63,6 +67,9 @@ public class IrrigationManagement implements Shutdownable {
 	private Map<Integer, List<Irrigator>> irrigators;
 
 	private ActiveCycle activeCycle;
+	
+	private GpioController gpio;
+
 	
 	/**
 	 * Entry-point at startup.
@@ -137,7 +144,7 @@ public class IrrigationManagement implements Shutdownable {
 		finally {
 
 			// stop admin-httpserver
-			main.stop();
+			main.stop(config);
 
 		}
 
@@ -265,9 +272,34 @@ public class IrrigationManagement implements Shutdownable {
 		}
 
 	}
+	
+	private void stopIrrigators() {
+		
+		final Set<Irrigator> nonCollectiveIrrigators = getNonCollectiveIrrigators();
+		
+		for (final Irrigator irrigator : nonCollectiveIrrigators) {
+			try {
+				irrigator.off();
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "Could not stop irrigator '" + irrigator.getId() + "'", e);
+			}
+		}
+		
+	}
+	
+	private void stopGpio(final ConfigurationUtils config) {
+		
+		if (!config.isTestEnvironment()) {
+			gpio.shutdown();
+		}
+		
+	}
 
-	private void stop() {
+	private void stop(final ConfigurationUtils config) {
 
+		stopIrrigators();
+		stopGpio(config);
+		
 		if (httpsAdmin != null) {
 			httpsAdmin.stop();
 		}
@@ -325,7 +357,7 @@ public class IrrigationManagement implements Shutdownable {
 	private void initializeGpio(final ConfigurationUtils config) {
 
 		if (!config.isTestEnvironment()) {
-			GpioUtil.enableNonPrivilegedAccess();
+			gpio = GpioFactory.getInstance();
 		}
 
 	}
@@ -404,8 +436,16 @@ public class IrrigationManagement implements Shutdownable {
 
 					irrigator.setType(type);
 
-					final String gpio = config.getIrrigatorGpio(id);
-					irrigator.setGpio(gpio);
+					final String gpioPinName = config.getIrrigatorGpio(id);
+					
+					final GpioPinDigitalOutput gpioPin = gpio.provisionDigitalOutputPin(
+							RaspiPin.getPinByName(gpioPinName),
+							"Irrigator" + irrigator.getId(),
+							PinState.HIGH);
+					gpioPin.setShutdownOptions(true, PinState.HIGH,
+							PinPullResistance.OFF, PinMode.DIGITAL_INPUT);
+					
+					irrigator.setGpio(gpioPin);
 
 					break;
 				}
@@ -444,13 +484,19 @@ public class IrrigationManagement implements Shutdownable {
 				final int area = config.getIrrigatorArea(id);
 				common.setArea(area);
 
-				final int sensorId = config.getIrrigatorHumanitySensor(id);
-				final HumanitySensor sensor = humanitySensors.get(sensorId);
-				if (sensor == null) {
-					throw new RuntimeException("Unknown humanity sensor '"
-							+ sensorId + "' used by irrigator '" + id + "'");
+				try {
+					final int sensorId = config.getIrrigatorHumanitySensor(id);
+					final HumanitySensor sensor = humanitySensors.get(sensorId);
+					if (sensor == null) {
+						throw new RuntimeException("Unknown humanity sensor '"
+								+ sensorId + "' used by irrigator '" + id + "'");
+					}
+					common.setHumanitySensor(sensor);
+				} catch (Exception e) {
+					logger.log(Level.INFO, "Could not initialize humanity sensor - "
+							+ "using no sensor!", e);
+					common.setHumanitySensor(null);
 				}
-				common.setHumanitySensor(sensor);
 
 				// turn of on startup
 				try {

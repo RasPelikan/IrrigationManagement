@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -65,6 +66,8 @@ public class HttpsAdmin {
 	
 	private HttpsServer httpsServer;
 	
+	private ExecutorService executorService;
+	
 	private HttpContextBuilder httpContextBuilder;
 	
 	public HttpsAdmin(final ConfigurationUtils config, final IrrigationManagement im)
@@ -85,8 +88,9 @@ public class HttpsAdmin {
 			address = new InetSocketAddress(host, port);
 		}
 		
+		executorService = java.util.concurrent.Executors.newFixedThreadPool(5);
 		httpsServer = HttpsServer.create(address, REQUEST_BACKLOG);
-		httpsServer.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(5));
+		httpsServer.setExecutor(executorService);
 		
         char[] passphrase = config.getHttpsAdminKeystorePassword().toCharArray();
         KeyStore ks = KeyStore.getInstance("JKS");
@@ -153,7 +157,7 @@ public class HttpsAdmin {
 	public void stop() {
 		
 		httpContextBuilder.cleanup();
-		
+		executorService.shutdown();	
 		httpsServer.stop(5);
 		logger.info("Shutdown of HttpServer done...");
 		
