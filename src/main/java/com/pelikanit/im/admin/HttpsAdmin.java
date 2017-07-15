@@ -126,7 +126,7 @@ public class HttpsAdmin {
 		final String username = config.getHttpsAdminUsername();
 		final String password = config.getHttpsAdminPassword();
 		if ((username != null) && !username.trim().isEmpty()) {
-			adminContext.setAuthenticator(new BasicAuthenticator("get") {
+			adminContext.setAuthenticator(new BasicAuthenticator("IM") {
 			
 				@Override
 		        public boolean checkCredentials(String user, String pwd) {
