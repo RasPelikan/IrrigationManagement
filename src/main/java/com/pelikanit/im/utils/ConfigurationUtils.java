@@ -18,6 +18,8 @@ public class ConfigurationUtils {
 	private static final String PROPS_HTTPSADMIN_KEYSTOREPASSWORD = "httpsadmin.keystore.password";
 	private static final String PROPS_HTTPSADMIN_HOST = "httpsadmin.host";
 	private static final String PROPS_HTTPSADMIN_PORT = "httpsadmin.port";
+	private static final String PROPS_HTTPSADMIN_USERNAME = "httpsadmin.username";
+	private static final String PROPS_HTTPSADMIN_PASSWORD = "httpsadmin.password";
 
 	private static final String POSTFIX_URL = ".url";
 	private static final String POSTFIX_AREA = ".area";
@@ -109,6 +111,18 @@ public class ConfigurationUtils {
 	public int getHttpsAdminPort() {
 		
 		return getIntProperty(PROPS_HTTPSADMIN_PORT);
+		
+	}
+	
+	public String getHttpsAdminUsername() {
+		
+		return props.getProperty(PROPS_HTTPSADMIN_USERNAME);
+		
+	}
+	
+	public String getHttpsAdminPassword() {
+		
+		return props.getProperty(PROPS_HTTPSADMIN_PASSWORD);
 		
 	}
 	

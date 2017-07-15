@@ -54,7 +54,7 @@ public class IrrigationManagement implements Shutdownable {
 
 	private static final Object shutdownMutex = new Object();
 
-	private volatile boolean shutdown;
+	private volatile int shutdown;
 
 	private HttpsAdmin httpsAdmin;
 
@@ -148,13 +148,17 @@ public class IrrigationManagement implements Shutdownable {
 
 		}
 
+		// can be used to identify intentional shutdown
+		logger.info("Shutdown return code: " + main.shutdown);
+		System.exit(main.shutdown);
+		
 	}
 
 	// constructor
 	public IrrigationManagement() {
 
 		// initialize properties
-		shutdown = false;
+		shutdown = -1;
 		activeCycle = null;
 
 		// capture "kill" commands and shutdown regularly
@@ -164,7 +168,7 @@ public class IrrigationManagement implements Shutdownable {
 			public void run() {
 
 				// shutdown
-				shutdown();
+				shutdown(1);
 
 			}
 
@@ -178,7 +182,7 @@ public class IrrigationManagement implements Shutdownable {
 	 */
 	public boolean isShutdown() {
 
-		return shutdown;
+		return shutdown != -1;
 
 	}
 
@@ -261,12 +265,12 @@ public class IrrigationManagement implements Shutdownable {
 	 * Shut's the mowing-robot down
 	 */
 	@Override
-	public void shutdown() {
+	public void shutdown(int returnCode) {
 
 		// wake-up main-method to shutdown all services immediately
 		synchronized (shutdownMutex) {
 
-			shutdown = true;
+			shutdown = returnCode;
 			shutdownMutex.notify();
 
 		}

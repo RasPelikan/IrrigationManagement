@@ -1,6 +1,7 @@
 <html>
 <head>
     <title>Irrigation</title>
+    <meta name="viewport" content="width=device-width" />
     <style type="text/css"><!--
         body {
             background-color: white;
@@ -86,8 +87,8 @@
             doAjax(url, whatNext);
         }
         
-        function shutdown() {
-            doAjax('/rest/im/shutdown', (response) => { alert(response.status); });
+        function shutdown(code) {
+            doAjax('/rest/im/shutdown?returnCode=' + code, (response) => { alert(response.status); });
         }
     //--></script>
 </head>
@@ -103,7 +104,9 @@
 </div>
 
 <div>
-    <button type="button" id="shutdown" onClick="shutdown();">Shutdown</button>
+    <button type="button" id="stop" onClick="shutdown(2);">Stop</button>
+    <br>
+    <button type="button" id="shutdown" onClick="shutdown(99);">Shutdown</button>
 </div>
 
 </body>

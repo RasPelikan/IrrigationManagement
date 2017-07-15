@@ -21,11 +21,13 @@ import org.jboss.resteasy.spi.ResteasyDeployment;
 import com.pelikanit.im.IrrigationManagement;
 import com.pelikanit.im.admin.im.IrrigationManagementService;
 import com.pelikanit.im.utils.ConfigurationUtils;
+import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
+import com.sun.net.httpserver.BasicAuthenticator;
 
 @SuppressWarnings("restriction")
 public class HttpsAdmin {
@@ -118,19 +120,21 @@ public class HttpsAdmin {
              }
         });
 	
-		httpsServer.createContext(IrrigationManagementHttpHandler.PATH,
-				new IrrigationManagementHttpHandler());
+		final HttpContext adminContext = httpsServer.createContext(
+				IrrigationManagementHttpHandler.PATH, new IrrigationManagementHttpHandler());
 		httpsServer.createContext("/apple-touch-icon.png", new IconHandler());
-		/*
-		adminContext.setAuthenticator(new BasicAuthenticator("get") {
+		final String username = config.getHttpsAdminUsername();
+		final String password = config.getHttpsAdminPassword();
+		if ((username != null) && !username.trim().isEmpty()) {
+			adminContext.setAuthenticator(new BasicAuthenticator("get") {
 			
-			@Override
-	        public boolean checkCredentials(String user, String pwd) {
-	            return user.equals("admin") && pwd.equals("password");
-	        }
-			
-	    });
-	    */
+				@Override
+		        public boolean checkCredentials(String user, String pwd) {
+		            return username.equals(user) && password.equals(pwd);
+		        }
+				
+		    });
+		}
 		
 		httpContextBuilder = new HttpContextBuilder();
 		httpContextBuilder.setPath("/rest");

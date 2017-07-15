@@ -2,6 +2,6 @@ package com.pelikanit.im;
 
 public interface Shutdownable {
 	
-	void shutdown();
+	void shutdown(int returnCode);
 	
 }

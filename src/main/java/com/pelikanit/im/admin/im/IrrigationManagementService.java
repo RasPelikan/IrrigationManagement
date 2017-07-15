@@ -28,7 +28,7 @@ public class IrrigationManagementService {
 	
 	@GET
 	@Path("/shutdown")
-	public String shutdown() {
+	public String shutdown(@QueryParam("returnCode") Integer returnCode) {
 		
 		new Thread(new Runnable() {
 			
@@ -43,8 +43,14 @@ public class IrrigationManagementService {
 				} catch (InterruptedException e) {
 					// never mind
 				}
-					
-				irrigationManagement.shutdown();
+				
+				final int code;
+				if (returnCode != null) {
+					code = returnCode;
+				} else {
+					code = 1;
+				}
+				irrigationManagement.shutdown(code);
 				
 			}
 			
