@@ -66,6 +66,8 @@ public class IrrigationManagementService {
 		
 		final Status result = new Status();
 		
+		result.setPaused(irrigationManagement.isPaused());
+		
 		final List<Irrigator> irrigators = new LinkedList<>();
 		result.setIrrigators(irrigators);
 		
@@ -83,7 +85,16 @@ public class IrrigationManagementService {
 		return result;
 		
 	}
-	
+
+	@GET
+	@Path("/pause")
+	public String pause(@QueryParam("paused") final boolean paused) throws Exception {
+		
+		irrigationManagement.setPaused(paused);
+		return "{\"status\": \"OK\"}";
+		
+	}
+
 	@GET
 	@Path("/irrigator/{id}")
 	public String switchIrrigator(@PathParam("id") final int id,

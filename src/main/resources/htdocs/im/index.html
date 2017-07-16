@@ -54,6 +54,7 @@
                     html += '</button></li>';
                 }
                 document.getElementById('irrigators').innerHTML = html;
+                document.getElementById('pause').innerHTML = newStatus.paused ? 'ON' : 'OFF';
             });
         }
         
@@ -64,6 +65,21 @@
             }
             switchIrrigator(document.status.irrigators[index].id, 'ON', (response) => {
                 stopAll(index + 1);
+            });
+        }
+        
+        function pause(button) {
+            var url = '/rest/im/pause?paused=';
+            if (button.innerHTML == 'ON') {
+                url += 'false';
+            } else {
+                url += 'true';
+            }
+            doAjax(url, (response) => {
+                if (response.status != 'OK') {
+                    alert(response.status);
+                }
+                fetchStatus();
             });
         }
         
@@ -78,11 +94,11 @@
         }
         
         function switchIrrigator(id, status, whatNext) {
-            var url = '/rest/im/irrigator/' + id;
+            var url = '/rest/im/irrigator/' + id + '?off=';
             if (status == 'ON') {
-                url += '?off=true';
+                url += 'true';
             } else {
-                url += '?off=false';
+                url += 'false';
             }
             doAjax(url, whatNext);
         }
@@ -94,20 +110,22 @@
 </head>
 <body onLoad="fetchStatus()">
 
-<div>
+<p>
+    Pause: <button type="button" id="pause" onClick="pause(this);">OFF</button>
+</p><p>
     Stop all: <button type="button" id="stopAll" onClick="stopAll(0);">Now</button>
-</div>
+</p>
 
 <div>
     <ul id="irrigators">
     </ul>
 </div>
 
-<div>
+<p>
     <button type="button" id="stop" onClick="shutdown(2);">Stop</button>
-    <br>
+</p><p>
     <button type="button" id="shutdown" onClick="shutdown(99);">Shutdown</button>
-</div>
+</p>
 
 </body>
 </html>

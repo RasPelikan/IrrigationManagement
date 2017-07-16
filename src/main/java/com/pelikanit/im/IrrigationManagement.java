@@ -69,6 +69,8 @@ public class IrrigationManagement implements Shutdownable {
 	private ActiveCycle activeCycle;
 	
 	private GpioController gpio;
+	
+	private volatile boolean paused;
 
 	
 	/**
@@ -160,6 +162,7 @@ public class IrrigationManagement implements Shutdownable {
 		// initialize properties
 		shutdown = -1;
 		activeCycle = null;
+		paused = false;
 
 		// capture "kill" commands and shutdown regularly
 		shutdownHook = new Thread() {
@@ -187,7 +190,7 @@ public class IrrigationManagement implements Shutdownable {
 	}
 
 	/**
-	 * Checks every minute whether something to do
+	 * Checks every minute whether there is something to do
 	 * 
 	 * @param calendar
 	 *            The minute
@@ -197,8 +200,14 @@ public class IrrigationManagement implements Shutdownable {
 		if (activeCycle == null) {
 			activeCycle = getNewCycle(calendar);
 		}
+
 		if (activeCycle != null) {
+
+			if (paused) {
+				return;
+			}
 			activeCycle = activeCycle.update(calendar.getTime());
+			
 		}
 
 	}
@@ -599,6 +608,14 @@ public class IrrigationManagement implements Shutdownable {
 		
 		return result;
 		
+	}
+	
+	public void setPaused(final boolean paused) {
+		this.paused = paused;
+	}
+	
+	public boolean isPaused() {
+		return paused;
 	}
 	
 	public void switchOn(final int irrigatorId) {

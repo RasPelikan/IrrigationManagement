@@ -7,18 +7,18 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "status")
 public class Status {
 
-	private boolean stopped;
+	private boolean paused;
 	
 	private List<Irrigator> irrigators;
+
+	public void setPaused(boolean paused) {
+		this.paused = paused;
+	}
 	
-	public boolean isStopped() {
-		return stopped;
+	public boolean isPaused() {
+		return paused;
 	}
-
-	public void setStopped(boolean stopped) {
-		this.stopped = stopped;
-	}
-
+	
 	public List<Irrigator> getIrrigators() {
 		return irrigators;
 	}
