@@ -103,7 +103,11 @@ public class HttpsAdmin {
 
         SSLContext sslContext = SSLContext.getInstance("TLS");
         sslContext.init(kmf.getKeyManagers(), null, null);
-
+        sslContext.getClientSessionContext().setSessionTimeout(3600 * 8);
+        sslContext.getClientSessionContext().setSessionCacheSize(100);
+        sslContext.getServerSessionContext().setSessionTimeout(3600 * 8);
+        sslContext.getServerSessionContext().setSessionCacheSize(100);
+        
         httpsServer.setHttpsConfigurator(new HttpsConfigurator(sslContext) {
              public void configure (final HttpsParameters params) {
                 SSLContext c = getSSLContext();
