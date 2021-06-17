@@ -2,6 +2,10 @@ package com.pelikanit.im;
 
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -68,6 +72,8 @@ public class IrrigationManagement implements Shutdownable {
 
 	private ActiveCycle activeCycle;
 	
+    private int intervalOffset = 0;
+
 	private GpioController gpio;
 	
 	private volatile boolean paused;
@@ -238,6 +244,41 @@ public class IrrigationManagement implements Shutdownable {
 		
 	}
 
+    private long getIntervalDayCounter(Calendar calendar) {
+
+        LocalDateTime now = LocalDateTime.ofInstant(calendar.toInstant(), ZoneId.systemDefault());
+        LocalDateTime reference = LocalDateTime.ofInstant(Instant.ofEpochSecond(0), ZoneId.systemDefault());
+        return ChronoUnit.DAYS.between(reference, now);
+
+    }
+
+    private boolean shouldStart(String start, Cycle cycle) {
+        
+        return start.equals(cycle.getStart());
+
+//        int cycleStart = Integer.parseInt(cycle.getStart());
+//        Calendar calendar = Calendar.getInstance();
+//        int min = cycleStart % 100;
+//        calendar.set(Calendar.MINUTE, min);
+//        calendar.set(Calendar.HOUR_OF_DAY, cycleStart - min);
+//        for (int i = 0; i < cycle.getDuration(); ++i) {
+//            Calendar candidate = (Calendar) calendar.clone();
+//            candidate.add(Calendar.MINUTE, i);
+//            String candidateStr = String.format("%02d%02d",
+//                    calendar.get(Calendar.HOUR_OF_DAY),
+//                    calendar.get(Calendar.MINUTE));
+//            if (candidateStr.equals(start)) {
+//                return true;
+//            }
+//        }
+//        return false;
+        
+    }
+    
+    private int calculateMinutesPassed(Calendar now, Cycle cycle) {
+        return 0;
+    }
+
 	/**
 	 * Find a cycle matching the given calendar
 	 * 
@@ -251,16 +292,27 @@ public class IrrigationManagement implements Shutdownable {
 				calendar.get(Calendar.MINUTE));
 		for (final Cycle cycle : cycles) {
 
-			if (start.equals(cycle.getStart())) {
+			if (shouldStart(start, cycle)) {
 
-				final int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
-				for (final int cycleDay : cycle.getDaysOfWeek()) {
-					if (dayOfWeek == cycleDay) {
+                int minutesPassed = calculateMinutesPassed(calendar, cycle);
 
-						return new ActiveCycle(cycle);
+                if (cycle.getInterval() > 1) {
+                    long days = getIntervalDayCounter(calendar);
+                    if ((days + intervalOffset) % cycle.getInterval() == 0) {
 
-					}
-				}
+                        return new ActiveCycle(cycle, minutesPassed);
+
+                    }
+                } else {
+                    final int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+                    for (final int cycleDay : cycle.getDaysOfWeek()) {
+                        if (dayOfWeek == cycleDay) {
+
+                            return new ActiveCycle(cycle, minutesPassed);
+
+                        }
+                    }
+                }
 
 			}
 
@@ -330,6 +382,9 @@ public class IrrigationManagement implements Shutdownable {
 		initializeSensors(config);
 		initializeIrrigators(config);
 		initializeCycles(config);
+
+        this.intervalOffset = config.getIntervalOffset();
+
 		dumpConfig();
 
 		logger.info("Init complete");
@@ -341,13 +396,16 @@ public class IrrigationManagement implements Shutdownable {
 		// Create a trust manager that does not validate certificate chains
 		TrustManager[] trustAllCerts = new TrustManager[] { 
 		    new X509TrustManager() {     
-		        public java.security.cert.X509Certificate[] getAcceptedIssuers() { 
+		        @Override
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() { 
 		            return new X509Certificate[0];
 		        } 
-		        public void checkClientTrusted( 
+		        @Override
+                public void checkClientTrusted( 
 		            java.security.cert.X509Certificate[] certs, String authType) {
 		            } 
-		        public void checkServerTrusted( 
+		        @Override
+                public void checkServerTrusted( 
 		            java.security.cert.X509Certificate[] certs, String authType) {
 		        }
 		    } 
@@ -551,6 +609,9 @@ public class IrrigationManagement implements Shutdownable {
 
 			final String start = config.getCycleStart(id);
 			cycle.setStart(start);
+			
+			final int interval = config.getCycleInterval(id);
+			cycle.setInterval(interval);
 
 			final LinkedList<List<Irrigator>> cycleIrrigators = new LinkedList<>();
 			cycle.setIrrigators(cycleIrrigators);
@@ -588,6 +649,7 @@ public class IrrigationManagement implements Shutdownable {
 
 	private void dumpConfig() {
 
+	    Calendar now = Calendar.getInstance();
 		logger.log(Level.INFO, "rain sensor: {0}", rainSensor);
 		logger.log(Level.INFO, "{0} humanity sensors:", humanitySensors.size());
 		for (final HumanitySensor sensor : humanitySensors.values()) {
@@ -596,6 +658,9 @@ public class IrrigationManagement implements Shutdownable {
 		logger.log(Level.INFO, "{0} cycles:", cycles.length);
 		for (final Cycle cycle : cycles) {
 			logger.log(Level.INFO, "Cycle: {0}", cycle);
+			if (cycle.getInterval() > 0) {
+                logger.log(Level.INFO, "    current offset: {0}", getIntervalDayCounter(now) % cycle.getInterval());
+			}
 		}
 
 	}

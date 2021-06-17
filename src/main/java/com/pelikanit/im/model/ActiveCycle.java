@@ -20,10 +20,10 @@ public class ActiveCycle {
 	
 	private Date startOfCurrentIrrigator = null;
 	
-	public ActiveCycle(final Cycle cycle) {
+    public ActiveCycle(final Cycle cycle, final int minutesPassed) {
 	
 		this.cycle = cycle;
-		calculateDurations();
+        calculateDurations(minutesPassed);
 		
 	}
 	
@@ -162,7 +162,7 @@ public class ActiveCycle {
 		
 	}
 
-	private void calculateDurations() {
+    private void calculateDurations(int minutesPassed) {
 		
 		durations = new HashMap<Integer, Integer>();
 		
@@ -187,7 +187,7 @@ public class ActiveCycle {
 				if (humanitySensor == null) {
 					adjustedArea = area;
 				} else {
-					adjustedArea = (int)(((float) area) * humanitySensor.getValue());
+					adjustedArea = (int)((area) * humanitySensor.getValue());
 				}
 				
 				cycleArea += adjustedArea;
@@ -205,6 +205,7 @@ public class ActiveCycle {
 			// calculate duration according cycle length
 			final int duration = (int)(((float) cycle.getDuration()) / totalArea * cycleArea);
 			
+
 			durations.put(i, duration);
 					
 		}

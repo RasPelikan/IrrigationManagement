@@ -30,7 +30,9 @@ public class ConfigurationUtils {
 	private static final String POSTFIX_START = ".start";
 	private static final String POSTFIX_DAYSOFWEEK = ".daysofweek";
 	private static final String POSTFIX_IRRIGATORS = ".irrigators";
+    private static final String POSTFIX_INTERVAL = ".interval";
 	
+    private static final String PROPS_INTERVAL_OFFSET = "interval.offset";
 	private static final String PROPS_SENSOR_HUMANITY = "sensor.humanity.";
 	private static final String PROPS_SENSOR_RAIN_URL = "sensor.rain.url";
 	private static final String PROPS_CYCLES = "cycles";
@@ -151,6 +153,12 @@ public class ConfigurationUtils {
 		
 	}
 	
+    public int getIntervalOffset() {
+
+        return getIntProperty(PROPS_INTERVAL_OFFSET);
+
+    }
+
 	public String getRainSensorUrl() {
 		
 		final String key = PROPS_SENSOR_RAIN_URL;
@@ -178,6 +186,13 @@ public class ConfigurationUtils {
 		return getIntPropertyArray(key);
 		
 	}
+
+    public int getCycleInterval(final int cycle) {
+
+        final String key = PROPS_CYCLE + Integer.toString(cycle) + POSTFIX_INTERVAL;
+        return getIntProperty(key);
+
+    }
 
 	public int[] getCycleDaysOfWeek(final int cycle) {
 		

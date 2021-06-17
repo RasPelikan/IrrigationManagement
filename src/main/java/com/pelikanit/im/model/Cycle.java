@@ -17,6 +17,8 @@ public class Cycle {
 	
 	private List<List<Irrigator>> irrigators;
 	
+    private int interval = 1;
+
 	@Override
 	public String toString() {
 		return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
@@ -77,5 +79,13 @@ public class Cycle {
 	public void setIrrigators(List<List<Irrigator>> irrigators) {
 		this.irrigators = irrigators;
 	}
+
+    public int getInterval() {
+        return interval;
+    }
+
+    public void setInterval(int interval) {
+        this.interval = interval;
+    }
 	
 }
