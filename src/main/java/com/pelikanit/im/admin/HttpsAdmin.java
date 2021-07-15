@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLEngine;
 
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.plugins.server.sun.http.HttpContextBuilder;
@@ -21,13 +21,13 @@ import org.jboss.resteasy.spi.ResteasyDeployment;
 import com.pelikanit.im.IrrigationManagement;
 import com.pelikanit.im.admin.im.IrrigationManagementService;
 import com.pelikanit.im.utils.ConfigurationUtils;
+import com.sun.net.httpserver.BasicAuthenticator;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 import com.sun.net.httpserver.HttpsServer;
-import com.sun.net.httpserver.BasicAuthenticator;
 
 @SuppressWarnings("restriction")
 public class HttpsAdmin {
@@ -90,9 +90,9 @@ public class HttpsAdmin {
 			address = new InetSocketAddress(host, port);
 		}
 		
-		executorService = java.util.concurrent.Executors.newFixedThreadPool(5);
+        // executorService = java.util.concurrent.Executors.newFixedThreadPool(5);
 		httpsServer = HttpsServer.create(address, REQUEST_BACKLOG);
-		httpsServer.setExecutor(executorService);
+        // httpsServer.setExecutor(executorService);
 		
         char[] passphrase = config.getHttpsAdminKeystorePassword().toCharArray();
         KeyStore ks = KeyStore.getInstance("JKS");
@@ -109,9 +109,15 @@ public class HttpsAdmin {
         sslContext.getServerSessionContext().setSessionCacheSize(100);
         
         httpsServer.setHttpsConfigurator(new HttpsConfigurator(sslContext) {
-             public void configure (final HttpsParameters params) {
-                SSLContext c = getSSLContext();
-
+             @Override
+            public void configure (final HttpsParameters params) {
+                 SSLContext c = getSSLContext();
+                 SSLEngine e = c.createSSLEngine();
+                 params.setNeedClientAuth(false);
+                 params.setCipherSuites(e.getEnabledCipherSuites());
+                 params.setProtocols(e.getEnabledProtocols());
+                 params.setSSLParameters(c.getDefaultSSLParameters());
+                 /*
                  // get the default parameters
                  SSLParameters sslparams = c.getDefaultSSLParameters();
 
@@ -121,6 +127,7 @@ public class HttpsAdmin {
                  sslparams.setProtocols(params.getProtocols());
 
                  params.setSSLParameters(sslparams);
+                 */
              }
         });
 	
@@ -164,8 +171,8 @@ public class HttpsAdmin {
 	
 	public void stop() {
 		
-		httpContextBuilder.cleanup();
-		executorService.shutdown();	
+        httpContextBuilder.cleanup();
+        // executorService.shutdown();
 		httpsServer.stop(5);
 		logger.info("Shutdown of HttpServer done...");
 		
