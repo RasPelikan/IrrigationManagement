@@ -1,0 +1,131 @@
+<html>
+<head>
+    <title>Irrigation</title>
+    <meta name="viewport" content="width=device-width" />
+    <style type="text/css"><!--
+        body {
+            background-color: white;
+        }
+    --></style>
+    <script language="Javascript"><!--
+        var status;
+                
+        function doAjax(url, onReadyFunction) {
+            var ajax = null;
+            if (window.XMLHttpRequest) { //Google Chrome, Mozilla Firefox, Opera, Safari, IE 10
+                ajax = new XMLHttpRequest();
+            }
+            else if (window.ActiveXObject){ // Internet Explorer 9 und niedriger
+                try {
+                    ajax = new ActiveXObject("Msxml2.XMLHTTP.6.0");
+                } catch(e) {
+                    try {
+                        ajax = new ActiveXObject("Msxml2.XMLHTTP.3.0");
+                    }
+                    catch(e) {}
+                }
+            }
+            if (ajax == null) {
+                alert("Mit diesem Browser ist keine Darstellung möglich!");
+                return;
+            }
+            ajax.open("GET", url, true);
+            ajax.onreadystatechange = function() {
+                if (this.readyState == 4) {
+                    if (this.status == 200) {
+                        var obj = JSON.parse(this.responseText);
+                        onReadyFunction(obj);
+                    }
+                }
+            };
+            ajax.send();
+        }
+        
+        function fetchStatus() {
+            doAjax('rest/status', (newStatus) => {
+                document.status = newStatus;
+                var html = '';
+                for (var i = 0; i < document.status.irrigators.length; ++i) {
+                    var irrigator = document.status.irrigators[i];
+                    html += '<li>' + irrigator.id + ': ';
+                    html += '<button type="button" id="switchIrrigator_' + irrigator.id;
+                    html += '" onClick="switchIrrigatorOnClick(this);">';
+                    html += (irrigator.on ? 'ON' : 'OFF');
+                    html += '</button></li>';
+                }
+                document.getElementById('irrigators').innerHTML = html;
+                document.getElementById('pause').innerHTML = newStatus.paused ? 'ON' : 'OFF';
+            });
+        }
+        
+        function stopAll(index) {
+            if (index == document.status.irrigators.length) {
+                fetchStatus();
+                return;
+            }
+            switchIrrigator(document.status.irrigators[index].id, 'ON', (response) => {
+                stopAll(index + 1);
+            });
+        }
+        
+        function pause(button) {
+            var url = 'rest/pause?paused=';
+            if (button.innerHTML == 'ON') {
+                url += 'false';
+            } else {
+                url += 'true';
+            }
+            doAjax(url, (response) => {
+                if (response.status != 'OK') {
+                    alert(response.status);
+                }
+                fetchStatus();
+            });
+        }
+        
+        function switchIrrigatorOnClick(button) {
+            var id = button.id.substring(button.id.indexOf('_') + 1);
+            switchIrrigator(id, button.innerHTML, (response) => {
+                if (response.status != 'OK') {
+                    alert(response.status);
+                }
+                fetchStatus();
+            });
+        }
+        
+        function switchIrrigator(id, status, whatNext) {
+            var url = 'rest/irrigator/' + id + '?off=';
+            if (status == 'ON') {
+                url += 'true';
+            } else {
+                url += 'false';
+            }
+            doAjax(url, whatNext);
+        }
+        
+        function shutdown(code) {
+            doAjax('rest/shutdown?returnCode=' + code, (response) => { alert(response.status); });
+        }
+    //--></script>
+</head>
+<body onLoad="fetchStatus()">
+
+<p>
+    Pause: <button type="button" id="pause" onClick="pause(this);">OFF</button>
+</p><p>
+    Stop all: <button type="button" id="stopAll" onClick="stopAll(0);">Now</button>
+</p>
+
+<div>
+    <ul id="irrigators">
+    </ul>
+</div>
+
+<p>
+    <button type="button" id="stop" onClick="shutdown(2);">Stop</button>
+</p><p>
+    <button type="button" id="shutdown" onClick="shutdown(99);">Shutdown</button>
+</p>
+
+</body>
+</html>
